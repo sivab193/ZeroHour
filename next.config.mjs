@@ -10,10 +10,6 @@ const nextConfig = {
         source: '/__/auth/handler',
         destination: 'https://countdown-70caa.firebaseapp.com/__/auth/handler',
       },
-      {
-        source: '/__/auth/action',
-        destination: 'https://countdown-70caa.firebaseapp.com/__/auth/action',
-      },
     ];
   },
 };
