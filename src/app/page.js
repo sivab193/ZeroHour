@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Grid } from "@/components/Grid";
 import { CountdownCard } from "@/components/CountdownCard";
 import { AnimatePresence, motion } from "framer-motion";
@@ -17,6 +17,8 @@ import { Footer } from "@/components/Footer";
 import { siteConfig } from "@/lib/siteConfig";
 import { cn } from "@/lib/utils";
 
+const CATEGORIES = ["All", "Birthdays", "Movies", "Work", "Vacations", "Anniversaries", "Other"];
+
 export default function Home() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
@@ -28,8 +30,6 @@ export default function Home() {
   const [filterCategory, setFilterCategory] = useState("All");
   const [showLanding, setShowLanding] = useState(false);
   const scrollRef = useRef(null);
-
-  const CATEGORIES = ["All", "Birthdays", "Movies", "Work", "Vacations", "Anniversaries", "Other"];
 
   useEffect(() => {
     if (!auth) {
@@ -49,7 +49,11 @@ export default function Home() {
   const { events, addEvent, deleteEvent, updateEvent, loading } = useEvents(user);
 
   // Dynamic: only show categories that actually exist in events
-  const activeCategories = ["All", ...CATEGORIES.filter(cat => cat !== "All" && events.some(e => (e.category || "Other") === cat))];
+  const activeCategories = useMemo(() => ["All", ...CATEGORIES.filter(cat => cat !== "All" && events.some(e => (e.category || "Other") === cat))], [events]);
+
+  const filteredEvents = useMemo(() => {
+    return events.filter(e => filterCategory === "All" || (e.category || "Other") === filterCategory);
+  }, [events, filterCategory]);
 
   const handleAddEvent = () => {
     setEditingEvent(null);
@@ -97,7 +101,7 @@ export default function Home() {
         </div>
       )}
 
-      {events.filter(e => filterCategory === "All" || (e.category || "Other") === filterCategory).length === 0 ? (
+      {filteredEvents.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <p className="text-zinc-500 text-lg font-medium">No events yet</p>
           <p className="text-zinc-600 text-sm mt-1">Events will appear here once they&apos;re added.</p>
@@ -105,9 +109,7 @@ export default function Home() {
       ) : (
         <Grid>
           <AnimatePresence mode="popLayout">
-            {events
-              .filter(e => filterCategory === "All" || (e.category || "Other") === filterCategory)
-              .map((event) => (
+            {filteredEvents.map((event) => (
                 <CountdownCard key={event.id} event={event} onDelete={deleteEvent} onEdit={handleEditEvent} isAdmin={!!user} />
               ))}
           </AnimatePresence>
@@ -154,9 +156,7 @@ export default function Home() {
         <div className="flex flex-col justify-start flex-1 min-h-0 w-full relative">
           <div className="flex flex-col md:grid md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 w-full md:pb-0 sm:overflow-visible">
             <AnimatePresence mode="popLayout">
-              {events
-                .filter(e => filterCategory === "All" || (e.category || "Other") === filterCategory)
-                .map((event) => (
+              {filteredEvents.map((event) => (
                   <div key={event.id} className="w-full md:w-auto shrink-0">
                     <CountdownCard event={event} onDelete={deleteEvent} onEdit={handleEditEvent} isAdmin={false} />
                   </div>
