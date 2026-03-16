@@ -82,7 +82,7 @@ export function EventModal({ isOpen, onClose, onSave, onDelete, event }) {
                         className={selectStyles}
                     >
                         {COMMON_TIMEZONES.map((tz) => (
-                            <option key={tz.value} value={tz.value}>
+                            <option key={tz.value} value={tz.value} className="bg-zinc-900 text-white">
                                 {tz.label}
                             </option>
                         ))}
@@ -95,10 +95,10 @@ export function EventModal({ isOpen, onClose, onSave, onDelete, event }) {
                         onChange={(e) => setDisplayFormat(e.target.value)}
                         className={selectStyles}
                     >
-                        <option value="default">Default (Days/Hrs/Min/Sec)</option>
-                        <option value="weeks">Weeks (Wks/Days/Hrs/Min/Sec)</option>
-                        <option value="months">Months (Mths/Days/Hrs/Min/Sec)</option>
-                        <option value="days_only">Total Days Only</option>
+                        <option value="default" className="bg-zinc-900 text-white">Default (Days/Hrs/Min/Sec)</option>
+                        <option value="weeks" className="bg-zinc-900 text-white">Weeks (Wks/Days/Hrs/Min/Sec)</option>
+                        <option value="months" className="bg-zinc-900 text-white">Months (Mths/Days/Hrs/Min/Sec)</option>
+                        <option value="days_only" className="bg-zinc-900 text-white">Total Days Only</option>
                     </select>
                 </div>
                 <div>

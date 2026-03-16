@@ -89,7 +89,7 @@ export function DateTimePicker({ date, setDate }) {
                                 onChange={(e) => handleTimeChange("hour", e.target.value)}
                             >
                                 {Array.from({ length: 24 }).map((_, i) => (
-                                    <option key={i} value={i}>
+                                    <option key={i} value={i} className="bg-zinc-900 text-white">
                                         {i.toString().padStart(2, '0')}
                                     </option>
                                 ))}
@@ -101,7 +101,7 @@ export function DateTimePicker({ date, setDate }) {
                                 onChange={(e) => handleTimeChange("minute", e.target.value)}
                             >
                                 {Array.from({ length: 4 }).map((_, i) => (
-                                    <option key={i * 15} value={i * 15}>
+                                    <option key={i * 15} value={i * 15} className="bg-zinc-900 text-white">
                                         {(i * 15).toString().padStart(2, '0')}
                                     </option>
                                 ))}
