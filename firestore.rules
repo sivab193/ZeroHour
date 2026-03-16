@@ -23,10 +23,22 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // Platform Stats Collection (New!)
-    match /stats/{document=**} {
-      // Allow public read/write for anonymous counters (visits, global aggregates)
-      allow read, write: if true;
+    // Platform Stats Collection
+    match /stats/counters {
+      // Stats are public
+      allow read: if true;
+
+      // Only allow clients to increment the visit counter
+      // All other fields (users, publicEvents) must be managed by Cloud Functions (Admin SDK)
+      allow update: if
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['visits']) &&
+        request.resource.data.visits == resource.data.visits + 1;
+
+      // Allow initial creation if it follows the starting schema
+      allow create: if
+        request.resource.data.users == 0 &&
+        request.resource.data.publicEvents == 0 &&
+        request.resource.data.visits == 1;
     }
   }
 }

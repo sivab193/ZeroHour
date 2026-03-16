@@ -69,9 +69,6 @@ export function ProfileModal({ isOpen, onClose, user }) {
                 createdAt: new Date().toISOString()
             });
 
-            // Increment the users counter
-            await updateDoc(countersRef, { users: increment(1) }).catch(() => { });
-
             setExistingSlug(cleanSlug);
         } catch (err) {
             console.error(err);

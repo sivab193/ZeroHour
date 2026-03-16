@@ -75,11 +75,6 @@ export function useEvents(user) {
                 userId: user.uid,
                 createdAt: new Date().toISOString()
             });
-
-            // Update public events counter if the new event is public
-            if (eventData.isPublic) {
-                await updateDoc(countersRef, { publicEvents: increment(1) }).catch(() => { });
-            }
         } catch (error) {
             console.error("Error adding event:", error);
         }
@@ -105,13 +100,6 @@ export function useEvents(user) {
                 Object.entries(eventData).filter(([_, v]) => v !== undefined)
             );
             await updateDoc(eventRef, cleanData);
-
-            // Adjust public events counter on toggle
-            if (!wasPublic && isNowPublic) {
-                await updateDoc(countersRef, { publicEvents: increment(1) }).catch(() => { });
-            } else if (wasPublic && !isNowPublic) {
-                await updateDoc(countersRef, { publicEvents: increment(-1) }).catch(() => { });
-            }
         } catch (error) {
             console.error("Error updating event:", error);
         }
@@ -120,17 +108,8 @@ export function useEvents(user) {
     const deleteEvent = async (id) => {
         if (!user) return;
         try {
-            // Check if the event being deleted was public
             const eventRef = doc(db, "events", id);
-            const snap = await getDoc(eventRef);
-            const wasPublic = snap.exists() ? snap.data().isPublic : false;
-
             await deleteDoc(eventRef);
-
-            // Decrement public events counter if it was public
-            if (wasPublic) {
-                await updateDoc(countersRef, { publicEvents: increment(-1) }).catch(() => { });
-            }
         } catch (e) {
             console.error("Error deleting event: ", e);
         }
