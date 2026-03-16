@@ -1,6 +1,7 @@
 const { onRequest } = require("firebase-functions/v2/https");
+const { onDocumentCreated, onDocumentDeleted, onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const { initializeApp } = require("firebase-admin/app");
-const { getFirestore } = require("firebase-admin/firestore");
+const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 const { logger } = require("firebase-functions");
 
 initializeApp();
@@ -162,3 +163,78 @@ exports.runIntegrityCheck = onRequest(
         }
     }
 );
+
+/**
+ * Trigger: When a new user slug is claimed, increment the global user counter.
+ */
+exports.onUserCreated = onDocumentCreated("users/{slug}", async (event) => {
+    logger.info(`Incrementing user counter for new slug: ${event.params.slug}`);
+    try {
+        const countersRef = db.doc("stats/counters");
+        await countersRef.update({ users: FieldValue.increment(1) });
+    } catch (err) {
+        logger.error("Failed to increment users counter:", err);
+        // If update fails (e.g. doc doesn't exist), integrity check can fix it later
+    }
+});
+
+/**
+ * Trigger: When an event is created, increment publicEvents if it's public.
+ */
+exports.onEventCreated = onDocumentCreated("events/{eventId}", async (event) => {
+    const data = event.data.data();
+    if (data.isPublic === true) {
+        logger.info(`Incrementing publicEvents for new event: ${event.params.eventId}`);
+        try {
+            const countersRef = db.doc("stats/counters");
+            await countersRef.update({ publicEvents: FieldValue.increment(1) });
+        } catch (err) {
+            logger.error("Failed to increment publicEvents counter:", err);
+        }
+    }
+});
+
+/**
+ * Trigger: When an event is deleted, decrement publicEvents if it was public.
+ */
+exports.onEventDeleted = onDocumentDeleted("events/{eventId}", async (event) => {
+    const data = event.data.data();
+    if (data.isPublic === true) {
+        logger.info(`Decrementing publicEvents for deleted event: ${event.params.eventId}`);
+        try {
+            const countersRef = db.doc("stats/counters");
+            await countersRef.update({ publicEvents: FieldValue.increment(-1) });
+        } catch (err) {
+            logger.error("Failed to decrement publicEvents counter:", err);
+        }
+    }
+});
+
+/**
+ * Trigger: When an event is updated, adjust publicEvents if visibility changed.
+ */
+exports.onEventUpdated = onDocumentUpdated("events/{eventId}", async (event) => {
+    const before = event.data.before.data();
+    const after = event.data.after.data();
+
+    const wasPublic = before.isPublic === true;
+    const isPublic = after.isPublic === true;
+
+    if (!wasPublic && isPublic) {
+        logger.info(`Incrementing publicEvents: event ${event.params.eventId} became public`);
+        try {
+            const countersRef = db.doc("stats/counters");
+            await countersRef.update({ publicEvents: FieldValue.increment(1) });
+        } catch (err) {
+            logger.error("Failed to increment publicEvents counter:", err);
+        }
+    } else if (wasPublic && !isPublic) {
+        logger.info(`Decrementing publicEvents: event ${event.params.eventId} became private`);
+        try {
+            const countersRef = db.doc("stats/counters");
+            await countersRef.update({ publicEvents: FieldValue.increment(-1) });
+        } catch (err) {
+            logger.error("Failed to decrement publicEvents counter:", err);
+        }
+    }
+});
