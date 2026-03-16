@@ -5,6 +5,8 @@ import { Grid } from "@/components/Grid";
 import { CountdownCard } from "@/components/CountdownCard";
 import { AnimatePresence, motion } from "framer-motion";
 import { EventModal } from "@/components/EventModal";
+import { ImportCalendarModal } from "@/components/ImportCalendarModal";
+import { CalendarPlus } from "lucide-react";
 import { ProfileModal } from "@/components/ProfileModal";
 import { LoginModal } from "@/components/LoginModal";
 import { useEvents } from "@/hooks/useEvents";
@@ -22,6 +24,7 @@ const CATEGORIES = ["All", "Birthdays", "Movies", "Work", "Vacations", "Annivers
 export default function Home() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
@@ -65,6 +68,12 @@ export default function Home() {
     setIsEventModalOpen(true);
   };
 
+  const handleImportEvents = async (importedEvents) => {
+    for (const event of importedEvents) {
+      await addEvent(event);
+    }
+  };
+
   const handleSaveEvent = (eventData) => {
     if (editingEvent) updateEvent(eventData);
     else addEvent(eventData);
@@ -81,9 +90,15 @@ export default function Home() {
     <>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
         {user && (
-          <button onClick={handleAddEvent} className="p-3 rounded-full bg-emerald-500 text-white hover:scale-110 hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 shrink-0">
-            <Plus className="w-6 h-6" />
-          </button>
+          <div className="flex gap-2">
+            <button onClick={handleAddEvent} className="p-3 rounded-full bg-emerald-500 text-white hover:scale-110 hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20 shrink-0">
+              <Plus className="w-6 h-6" />
+            </button>
+            <button onClick={() => setIsImportModalOpen(true)} className="flex items-center gap-2 p-3 sm:px-4 sm:py-3 rounded-full bg-white/5 border border-white/10 text-emerald-400 hover:bg-white/10 transition-all font-medium text-sm shrink-0">
+              <CalendarPlus className="w-5 h-5 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">Import from Google</span>
+            </button>
+          </div>
         )}
       </div>
 
@@ -236,6 +251,7 @@ export default function Home() {
 
       <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
       <EventModal isOpen={isEventModalOpen} onClose={() => setIsEventModalOpen(false)} onSave={handleSaveEvent} onDelete={deleteEvent} event={editingEvent} />
+      <ImportCalendarModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} onImport={handleImportEvents} />
       <ProfileModal isOpen={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} user={user} />
 
       <Footer />

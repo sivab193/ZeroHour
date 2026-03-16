@@ -14,6 +14,7 @@ import { Check, X, Loader2, Info } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const googleProvider = new GoogleAuthProvider();
+googleProvider.addScope("https://www.googleapis.com/auth/calendar.readonly");
 
 function getPasswordCriteria(password) {
     return [
@@ -63,7 +64,11 @@ export function LoginModal({ isOpen, onClose }) {
         setLoading(true);
         setError("");
         try {
-            await signInWithPopup(auth, googleProvider);
+            const result = await signInWithPopup(auth, googleProvider);
+            const credential = GoogleAuthProvider.credentialFromResult(result);
+            if (credential) {
+                localStorage.setItem("googleCalendarAccessToken", credential.accessToken);
+            }
             onClose();
         } catch (err) {
             console.error(err);
